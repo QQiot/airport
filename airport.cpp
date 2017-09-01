@@ -1,7 +1,7 @@
 
 #include<stdio.h>
+#include<string.h>
 #include<iostream>
-#include <stdlib.h>
 #include <time.h>
 
 using namespace std;
@@ -36,7 +36,7 @@ int find(int array[],int rear,int num);
 void randEvent(vexnode1 dig[],int nodeNumNew);
 int  get_rand_num(int num);
 
-void main() {
+int main() {
 
 
     printf(" 求求AOE厙腔壽瑩繚噤求求\n");
