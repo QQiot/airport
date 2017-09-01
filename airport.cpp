@@ -27,22 +27,31 @@ typedef struct {
 void creatgraph(vexnode1 dig[],int nodeNumNew);//建立AOE网的邻接表
 void criticalpath(vexnode1 dig[],int nodeNumNew);//dig是AOE网的带权邻接表
 void printGraph(vexnode1 dig[],int nodeNumNew);
-void read(FILE *fp);
-int readmain();
+
 void timer(vexnode1 dig[],int nodeNumNew);
+void  StrArrayCpy(vexnode1* out, vexnode1* in);
+int find(int array[],int rear,int num);
 
 void main() {
-    printf(" ——AOE网的关键路径——\n");
+
+
+    printf(" ――AOE网的关键路径――\n");
     vexnode1 dig[nodeNum];
     int nodeNumNew = sizeof(dig)/sizeof(dig[0]);
     creatgraph(dig,nodeNumNew);
+
+
     printGraph(dig,nodeNumNew);
     criticalpath(dig,nodeNumNew);
-
     timer(dig,nodeNumNew);
-
     system("pause");
 }
+
+void  StrArrayCpy(vexnode1* out, vexnode1* in)
+{
+    memcpy(out, in, sizeof(vexnode1)*nodeNum);
+}
+
 
 void printGraph(vexnode1 dig[],int nodeNumNew){
     printf("【输出AOE网的邻接表】\n");
@@ -52,7 +61,7 @@ void printGraph(vexnode1 dig[],int nodeNumNew){
         printf("|%c %d |", dig[i].vertex, dig[i].id);
         s = dig[i].link;
         while (s) {
-            printf("——> %d %d", s->adjvex + 1, s->dut);
+            printf("――> %d %d", s->adjvex + 1, s->dut);
             s = s->next;
         }
         printf("\n");
@@ -98,6 +107,9 @@ void creatgraph(vexnode1 dig[],int nodeNumNew)//建立AOE网的邻接表
 
 void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 {
+    vexnode1 * temp;
+    temp = new vexnode1[nodeNum];
+    StrArrayCpy(temp,dig);
 
     printf("【输出关键活动】\n");
     printf("每行分别为开始事件、结束事件、最早开始时间、最迟开始时间和完成活动的时间余量\n");
@@ -112,7 +124,7 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
     for (i = 0; i < numNew; i++)
         ve[i] = 0;    //各时间v(i+1)的最早发生时间均置初值零
     for (i = 0; i < numNew; i++)//扫描顶点表，将入度为零的顶点入队
-        if (dig[i].id == 0)
+        if (temp[i].id == 0)
             tport[++rear] = i;
     m = 0;  //计数器初始化
     while (front != rear) //队非空
@@ -120,14 +132,14 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
         front++;
         j = tport[front];  //v(j+1)出队，即删去v(j+1)
         m++;    //对出队的顶点个数计数
-        p = dig[j].link;  //p指向v(j+1)为起点的出边表中表结点的下标
+        p = temp[j].link;  //p指向v(j+1)为起点的出边表中表结点的下标
         while (p)   //删去所有以v(j+1)为起点的出边
         {
             k = p->adjvex;//k是边(v(j+1),v(k+1))终点v(k+1)的下标
-            dig[k].id--;   //v(k+1)入度减1
+            temp[k].id--;   //v(k+1)入度减1
             if (ve[j] + p->dut > ve[k])
                 ve[k] = ve[j] + p->dut;   //修改ve[k]
-            if (dig[k].id == 0)
+            if (temp[k].id == 0)
                 tport[++rear] = k;  //新的入度为零的顶点v(k+1)入队
             p = p->next;   //找v(j+1)的下一条边
         }
@@ -143,7 +155,7 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
     for (i = numNew - 2; i >= 0; i--)//按拓扑序列的逆序取顶点
     {
         j = tport[i];
-        p = dig[j].link;  //取v(j+1)的出边表上第一个表结点
+        p = temp[j].link;  //取v(j+1)的出边表上第一个表结点
         while (p) {
             k = p->adjvex;  //k为(v(j+1),v(k+1))的终点v(k+1)的下标
             if ((vl[k] - p->dut) < vl[j])
@@ -154,14 +166,14 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
     i = 0;//边计数器置初值
     for (j = 0; j < numNew; j++)  //扫描顶点表，依次取顶点v(j+1)
     {
-        p = dig[j].link;
+        p = temp[j].link;
         while (p)   //扫描顶点的v(j+1)的出边表
         {//计算各边(v(j+1),v(k+1))所代表的活动a(i+1)的e[i]和l[i]
             k = p->adjvex;
             e[++i] = ve[j];
             l[i] = vl[k] - p->dut;
             printf("%c\t%c\t%d\t%d\t%d\t",//输出活动a(i+1)的有关信息
-                   dig[j].vertex, dig[k].vertex, e[i], l[i], l[i] - e[i]);
+                   temp[j].vertex, temp[k].vertex, e[i], l[i], l[i] - e[i]);
             if (l[i] == e[i])//关键活动
                 printf("关键活动");
             printf("\n");
@@ -174,7 +186,9 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 
 void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 {
-    int numNew = nodeNumNew;
+    int front = -1, rear = -1;  //顺序队列的首位指针置初值-1
+    int *delNode = (int *)malloc(nodeNumNew*sizeof(int));
+
     int k;
     int firstNode = 0;
     edgenode1 *p;
@@ -199,15 +213,76 @@ void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
             }
             k = p->adjvex;//k是边(v(j+1),v(k+1))终点v(k+1)的下标
             dig[k].id--;   //v(k+1)入度减1
+            if(dig[k].id == 0){
+                delNode[++rear] = k;
+            }
         }
         pBack = p;
         p = p->next;
         pNum++;
     }
 
-    printGraph(dig,nodeNumNew);
-    criticalpath(dig,nodeNumNew);
+    vexnode1 * digNew;
+    if(rear>=0){
+        digNew = new vexnode1[nodeNumNew-rear-1];
 
+        edgenode1  * sLast;
+        edgenode1  * delFirst;
+        edgenode1  * pp;
+
+        for(int j=0; j<nodeNumNew; j++){
+
+            if(find(delNode,rear,j)==-1){
+                delFirst = dig[j].link;
+            }
+
+            pp = dig[j].link;  //p指向v(j+1)为起点的出边表中表结点的下标
+
+            while (pp)   //删去所有以v(j+1)为起点的出边
+            {
+                k = pp->adjvex;//k是边(v(j+1),v(k+1))终点v(k+1)的下标
+                pp->adjvex = k - find(delNode,rear,k);
+                if(pp->next==NULL){
+                    if(j==0){
+                        sLast = pp;
+                    }
+                    if(find(delNode,rear,j)==-1){
+                        sLast->next = delFirst;
+                        sLast = pp;
+                    }
+                }
+                pp = pp->next;   //找v(j+1)的下一条边
+            }
+
+
+            int pianyiliang = find(delNode,rear,j);
+            if(pianyiliang>-1){
+                digNew[j-pianyiliang] = dig[j];
+            }else{
+
+            }
+        }
+        nodeNumNew = nodeNumNew -rear -1;
+    }else{
+        digNew = dig;
+    }
+    printGraph(digNew,nodeNumNew);
+    criticalpath(digNew,nodeNumNew);
+
+    while (maxtime > 12)
+        timer(digNew,nodeNumNew);
+
+}
+
+int find(int array[],int rear,int num){
+    int returnNum = 0;
+    for(int front=0;front<=rear;front++){
+        if(num>array[front])
+            returnNum = front+1;
+        if(num==array[front])
+            returnNum = -1;
+    }
+    return returnNum;
 }
 
 
