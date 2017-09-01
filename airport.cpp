@@ -37,8 +37,6 @@ void main() {
     int nodeNumNew = sizeof(dig)/sizeof(dig[0]);
     creatgraph(dig,nodeNumNew);
     printGraph(dig,nodeNumNew);
-    printf("【输出关键活动】\n");
-    printf("每行分别为开始事件、结束事件、最早开始时间、最迟开始时间和完成活动的时间余量\n");
     criticalpath(dig,nodeNumNew);
     while(maxtime>0){
         timer(dig,nodeNumNew);
@@ -85,6 +83,9 @@ void creatgraph(vexnode1 dig[],int nodeNumNew)//建立AOE网的邻接表
 
 void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 {
+
+    printf("【输出关键活动】\n");
+    printf("每行分别为开始事件、结束事件、最早开始时间、最迟开始时间和完成活动的时间余量\n");
     int numNew = nodeNumNew;
     int i, j, k, m;
     int front = -1, rear = -1;  //顺序队列的首位指针置初值-1
@@ -159,103 +160,39 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 {
     int numNew = nodeNumNew;
-    int i, j, k, m;
-    int front = -1, rear = -1;  //顺序队列的首位指针置初值-1
-    int *tport = (int *)malloc(numNew*sizeof(int));
-
-    for (i = 0; i < numNew; i++)//扫描顶点表，将入度为零的顶点入队
-        if (dig[i].id == 0)
-            tport[++rear] = i;
+    int k;
+    int firstNode = 0;
     edgenode1 *p;
     edgenode1 *pBack;
-    while (front != rear) //队非空
-    {
-        front++;
-        j = tport[front];  //v(j+1)出队，即删去v(j+1)
-        m++;    //对出队的顶点个数计数
-        p = dig[j].link;  //p指向v(j+1)为起点的出边表中表结点的下标
-        /*
-        if(dig[j].vertex != 's'){
-            printf("---事件：%c已经开始---\n",dig[j].vertex);
-            dig[j].vertex = 's';
-        }
-        */
-        int pNum = 0;
-        while (p)   //删去所有以v(j+1)为起点的出边
-        {	pBack = p;
-            p->dut--;
-            /*
-            if(p->dut==0){
-                if(pNum == 0){
-                        dig[j].link = p->next;
-                    }else{
-                        pBack->next = p->next;
-                    }
 
-                k = p->adjvex;//k是边(v(j+1),v(k+1))终点v(k+1)的下标
-                dig[k].id--;   //v(k+1)入度减1
-                if (dig[k].id == 0){
-                    //TODO:
+    p = dig[firstNode].link;
 
-                }
-            }
-            */
-            p = p->next;   //找v(j+1)的下一条边
-            pNum++;
-        }
+    if(dig[firstNode].vertex != 's'){
+        printf("---事件：%c已经开始---\n",dig[firstNode].vertex);
+        dig[firstNode].vertex = 's';
     }
-    printf("【输出关键活动】\n");
-    printf("每行分别为开始事件、结束事件、最早开始时间、最迟开始时间和完成活动的时间余量\n");
+
+    int pNum = 0;//用于标示是不是第一个边节点
+    while (p)
+    {
+        p->dut--;
+        if(p->dut==firstNode){
+            if(pNum == firstNode){
+                dig[firstNode].link = p->next;
+            }else{
+                pBack->next = p->next;
+            }
+            k = p->adjvex;//k是边(v(j+1),v(k+1))终点v(k+1)的下标
+            dig[k].id--;   //v(k+1)入度减1
+        }
+        pBack = p;
+        p = p->next;
+        pNum++;
+    }
+
+    printGraph(dig,nodeNumNew);
     criticalpath(dig,nodeNumNew);
 
 }
 
 
-
-void read(FILE *fp)
-{
-    int row=0;
-    char mid;
-    while(!feof(fp))
-    {
-        mid=fgetc(fp); //从txt文本中读取一个字符赋值给mid
-        if(mid=='\n') //如果这个字符为换行符
-            row++; //记录txt数据行数
-    }
-    row++;  //最后一行没有换行符
-    printf("行数为%d\n",row);
-    rewind(fp); //回文件起始位置
-}
-
-int readmain()
-{
-    FILE *fp;
-    double data[9][2] = {0.0};   //二维数组
-    int index[9] = {0};
-    //二维数组行下标
-    double temp;
-    int i, j;
-    int count = 0;  //计数器，记录已读出的浮点数
-    if((fp=fopen(file_name, "rb")) == NULL) {
-        printf("请确认文件(%s)是否存在!\n", file_name);
-        exit(1);
-    }
-    read(fp);     //读取行数
-    while(1==fscanf(fp, "%d", &temp)) //lf,le都可以，但别的都不可以，%e也不行
-    {
-        data[(index[count%2])++][count%2] = temp;
-        count++;
-    }
-    fclose(fp);   //关闭句柄
-    /******处理数据****************/
-    for(i=0;i<9;i++)
-    {   printf("第%d行数据：\n",i+1);
-        for(j=0;j<2;j++)
-        {
-            printf("%d ", data[i][j]);//
-        }
-        printf("\n");
-    }
-
-    return 0;
-}
