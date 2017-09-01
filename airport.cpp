@@ -38,9 +38,9 @@ void main() {
     creatgraph(dig,nodeNumNew);
     printGraph(dig,nodeNumNew);
     criticalpath(dig,nodeNumNew);
-    while(maxtime>0){
-        timer(dig,nodeNumNew);
-    }
+
+    timer(dig,nodeNumNew);
+
     system("pause");
 }
 
@@ -61,23 +61,38 @@ void printGraph(vexnode1 dig[],int nodeNumNew){
 
 void creatgraph(vexnode1 dig[],int nodeNumNew)//建立AOE网的邻接表
 {
-    printf("【输入AOE网的顶点（顶点信息和入度，用空格隔开）】\n");
-    int i;
-    for (i = 0; i < nodeNumNew; i++) {
-        printf("第%d个顶点的信息和入度：", i + 1);
-        cin >> dig[i].vertex >> dig[i].id;
-        dig[i].link = NULL;
+    int i = 0;
+    printf("【输入AOE网的顶点node.txt（顶点信息和入度，用空格隔开）】\n");
+    char buffer[256]; //每行最多255个字符
+    FILE *fp;
+    if ( fp=fopen("D:\\node.txt","rb") )
+    {
+        while ( !feof(fp)&&i<nodeNumNew )
+        { fgets(buffer,255,fp);
+            sscanf(buffer,"%c %d",&dig[i].vertex , &dig[i].id);
+            dig[i].link = NULL;
+            i++;
+        }
+    }else{
+        printf("D:\\node.txt不存在\n");
     }
+
     printf("【输入AOE网的边（始点、终点和权，用空格隔开）】\n");
     edgenode1 *s;
-    int a, b;//记录边的始点和终点
-    for (i = 0; i < edgNum; i++) {
-        s = (edgenode1 *) malloc(sizeof(edgenode1));
-        printf("第%d条边的始点、终点和权：", i + 1);
-        cin >> a >> b >> s->dut;
-        s->adjvex = b - 1;
-        s->next = dig[a - 1].link;
-        dig[a - 1].link = s;
+    int a, b, c;//记录边的始点和终点
+    if ( fp=fopen("D:\\edge.txt","rb") )
+    {
+        for (i = 0; !feof(fp)&&i < edgNum; i++) {
+            s = (edgenode1 *) malloc(sizeof(edgenode1));
+            fgets(buffer,255,fp);
+            sscanf(buffer,"%d %d %d",&a , &b, &c);
+            s->dut = c;
+            s->adjvex = b - 1;
+            s->next = dig[a - 1].link;
+            dig[a - 1].link = s;
+        }
+    }else{
+        printf("D:\\edge.txt不存在\n");
     }
 }
 
