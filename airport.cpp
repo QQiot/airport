@@ -1,6 +1,8 @@
 
 #include<stdio.h>
 #include<iostream>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 #define nodeNum 9  //顶点数
@@ -31,6 +33,8 @@ void printGraph(vexnode1 dig[],int nodeNumNew);
 void timer(vexnode1 dig[],int nodeNumNew);
 void  StrArrayCpy(vexnode1* out, vexnode1* in);
 int find(int array[],int rear,int num);
+void randEvent(vexnode1 dig[],int nodeNumNew);
+int  get_rand_num(int num);
 
 void main() {
 
@@ -186,6 +190,7 @@ void criticalpath(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 
 void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 {
+    randEvent(dig,nodeNumNew);
     int front = -1, rear = -1;  //顺序队列的首位指针置初值-1
     int *delNode = (int *)malloc(nodeNumNew*sizeof(int));
 
@@ -216,17 +221,18 @@ void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
             if(dig[k].id == 0){
                 delNode[++rear] = k;
             }
+        }else{
+            pBack = p;
+            pNum++;
         }
-        pBack = p;
         p = p->next;
-        pNum++;
     }
 
     vexnode1 * digNew;
     if(rear>=0){
         digNew = new vexnode1[nodeNumNew-rear-1];
 
-        edgenode1  * sLast;
+        edgenode1  * sLast = NULL;
         edgenode1  * delFirst;
         edgenode1  * pp;
 
@@ -247,7 +253,11 @@ void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
                         sLast = pp;
                     }
                     if(find(delNode,rear,j)==-1){
-                        sLast->next = delFirst;
+                        if(NULL == sLast){
+                            dig[0].link = delFirst;
+                        }else{
+                            sLast->next = delFirst;
+                        }
                         sLast = pp;
                     }
                 }
@@ -257,6 +267,7 @@ void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
 
             int pianyiliang = find(delNode,rear,j);
             if(pianyiliang>-1){
+                digNew[0] = dig[0];
                 digNew[j-pianyiliang] = dig[j];
             }else{
 
@@ -269,8 +280,9 @@ void timer(vexnode1 dig[],int nodeNumNew)//dig是AOE网的带权邻接表
     printGraph(digNew,nodeNumNew);
     criticalpath(digNew,nodeNumNew);
 
-    while (maxtime > 12)
+    while (maxtime > 0){
         timer(digNew,nodeNumNew);
+    }
 
 }
 
@@ -278,11 +290,43 @@ int find(int array[],int rear,int num){
     int returnNum = 0;
     for(int front=0;front<=rear;front++){
         if(num>array[front])
-            returnNum = front+1;
+            returnNum = returnNum++;
         if(num==array[front])
-            returnNum = -1;
+            return -1;
     }
     return returnNum;
 }
 
 
+int  get_rand_num(int num)
+{
+    /* 获取随机数，并保证每次获得的不一样 */
+    srand((unsigned)time(NULL));
+    int r=rand();
+    /* 将随机数变为1-5之间 */
+    r =  r%num;
+    return r;
+}
+
+void randEvent(vexnode1 dig[],int nodeNumNew){
+    int in,out,x;
+    if(0==get_rand_num(3)){
+        edgenode1  * pp;
+        in = get_rand_num(nodeNumNew-1);
+        pp = dig[in].link;
+
+        while (pp)
+        {
+            if(0==get_rand_num(3)){
+                x = get_rand_num(5);
+                pp->dut =  pp->dut + x;
+                out = pp->adjvex;
+                printf("-----------------发生突发事件:%d-%d-%d\n",in,out,x);
+            }
+
+            pp = pp->next;   //找v(j+1)的下一条边
+        }
+
+
+    }
+}
